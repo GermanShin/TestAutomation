@@ -5,11 +5,13 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface GlobalStackProps extends cdk.StackProps {
   domainName: string;
-  dashboardFqdn: string; // allure.example.com
+  dashboardFqdn: string; //allurereport.ds-shin.com
+  loginFqdn: string; //allurereportlogin.ds-shin.com
 }
 
 export class GlobalStack extends cdk.Stack {
   public readonly cloudFrontCertArn: string;
+  public readonly cognitoCustomDomainCertArn: string;
 
   constructor(scope: Construct, id: string, props: GlobalStackProps) {
     super(scope, id, props);
@@ -23,9 +25,23 @@ export class GlobalStack extends cdk.Stack {
       validation: acm.CertificateValidation.fromDns(zone),
     });
 
+    const cognitoCustomDomainCert = new acm.Certificate(
+      this,
+      "CognitoCustomDomainCert",
+      {
+        domainName: props.loginFqdn,
+        validation: acm.CertificateValidation.fromDns(zone),
+      }
+    );
+
     this.cloudFrontCertArn = cert.certificateArn;
+    this.cognitoCustomDomainCertArn = cognitoCustomDomainCert.certificateArn;
 
     new cdk.CfnOutput(this, "CloudFrontCertArn", {
+      value: cert.certificateArn,
+    });
+
+    new cdk.CfnOutput(this, "CognitoCustomDomainCertArn", {
       value: cert.certificateArn,
     });
   }

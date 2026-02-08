@@ -2,5 +2,18 @@
   "hosted-zone:account=484907527321:domainName=ds-shin.com:region=us-east-1": {
     "Id": "/hostedzone/Z0465696WQLQNMYB9AZJ",
     "Name": "ds-shin.com."
+  },
+  "hosted-zone:account=484907527321:domainName=ds-shin.com:region=ap-southeast-2": {
+    "Id": "/hostedzone/Z0465696WQLQNMYB9AZJ",
+    "Name": "ds-shin.com."
+  },
+  "availability-zones:account=484907527321:region=ap-southeast-2": [
+    "ap-southeast-2a",
+    "ap-southeast-2b",
+    "ap-southeast-2c"
+  ],
+  "hosted-zone:account=484907527321:domainName=ds-shin.com:region=app-sourtheast-2": {
+    "Id": "/hostedzone/Z0465696WQLQNMYB9AZJ",
+    "Name": "ds-shin.com."
   }
 }

@@ -16,8 +16,8 @@
   },
   "context": {
     "domainName": "ds-shin.com",
-    "dashboardSub": "allure",
-    "loginSub": "login",
+    "dashboardSub": "allurereport",
+    "loginSub": "allurereportlogin",
     "reportsPrefix": "reports/",
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
