@@ -20,11 +20,13 @@ export interface RegionalStackProps extends cdk.StackProps {
   loginFqdn: string;
   cognitoCustomDomainCertARN: string;
   cognitoCloudFrontFqdn: string;
+  allureBucketName?: string; // Optional: provide existing bucket name
 }
 
 export class RegionalStack extends cdk.Stack {
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
+  public readonly allureBucket: s3.IBucket;
 
   constructor(scope: Construct, id: string, props: RegionalStackProps) {
     super(scope, id, props);
@@ -32,6 +34,28 @@ export class RegionalStack extends cdk.Stack {
     const zone = route53.HostedZone.fromLookup(this, "Zone", {
       domainName: props.domainName,
     });
+
+    // S3 Bucket for Allure Reports
+    // If you already have a bucket, use fromBucketName instead
+    const allureBucket = props.allureBucketName
+      ? s3.Bucket.fromBucketName(this, "AllureBucket", props.allureBucketName)
+      : new s3.Bucket(this, "AllureBucket", {
+          bucketName: `allure-reports-${this.account}`,
+          versioned: false,
+          encryption: s3.BucketEncryption.S3_MANAGED,
+          blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+          removalPolicy: cdk.RemovalPolicy.RETAIN, // Don't delete reports on stack deletion
+          autoDeleteObjects: false,
+          lifecycleRules: [
+            {
+              // Optional: Auto-delete old reports after 90 days
+              expiration: cdk.Duration.days(90),
+              enabled: true,
+            },
+          ],
+        });
+
+    this.allureBucket = allureBucket;
 
     // Create Dummy A record for the parent domain
     const parentDomainRecord = new route53.ARecord(

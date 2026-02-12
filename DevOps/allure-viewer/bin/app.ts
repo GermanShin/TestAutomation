@@ -14,6 +14,9 @@ const dashboardFqdn = `${dashboardSub}.${domainName}`;
 const loginFqdn = `${loginSub}.${domainName}`;
 const cognitoCloudFrontFqdn = "d2qpq62vczftwx.cloudfront.net";
 
+// Optional: If you already have an S3 bucket, specify it here
+const allureBucketName = app.node.tryGetContext("allureBucketName");
+
 const account = process.env.CDK_DEFAULT_ACCOUNT!;
 const region = process.env.CDK_DEFAULT_REGION!;
 
@@ -33,4 +36,5 @@ new RegionalStack(app, "AllureViewer-Regional", {
   loginFqdn,
   cognitoCustomDomainCertARN,
   cognitoCloudFrontFqdn,
+  allureBucketName,
 });
