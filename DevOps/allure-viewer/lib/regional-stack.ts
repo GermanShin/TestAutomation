@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib";
-import { CfnParameter } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
@@ -50,7 +49,7 @@ export class RegionalStack extends cdk.Stack {
             {
               // Optional: Auto-delete old reports after 90 days
               expiration: cdk.Duration.days(90),
-              enabled: true,
+              enabled: false, // Set to true if you want auto-deletion
             },
           ],
         });
@@ -134,7 +133,20 @@ export class RegionalStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, "../lambda/dashboard.ts"),
       handler: "handler",
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+      environment: {
+        ALLURE_BUCKET_NAME: allureBucket.bucketName,
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        externalModules: ["@aws-sdk/*"], // AWS SDK v3 is available in Lambda runtime
+      },
     });
+
+    // Grant Lambda read access to S3
+    allureBucket.grantRead(dashboardFn);
 
     const albCert = new acm.Certificate(this, "AlbCert", {
       domainName: props.dashboardFqdn, // allurereport.ds-shin.com
@@ -200,11 +212,23 @@ export class RegionalStack extends cdk.Stack {
       ),
     });
 
+    // Outputs
+    new cdk.CfnOutput(this, "AllureBucketName", {
+      value: allureBucket.bucketName,
+      description: "S3 bucket name for Allure reports",
+    });
     new cdk.CfnOutput(this, "CognitoLoginDomain", {
       value: `https://${props.loginFqdn}`,
     });
     new cdk.CfnOutput(this, "CognitoUserPoolClientId", {
       value: userPoolClient.userPoolClientId,
     });
+    new cdk.CfnOutput(this, "DashboardUrl", {
+      value: `https://${props.dashboardFqdn}`,
+      description: "Allure Reports Dashboard URL",
+    });
+
+    this.userPool = userPool;
+    this.userPoolClient = userPoolClient;
   }
 }

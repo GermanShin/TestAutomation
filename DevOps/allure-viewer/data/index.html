@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Allure Report - Sample Test Run</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* Header */
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .header-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .header-stats {
+        display: flex;
+        gap: 1.5rem;
+      }
+
+      .stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
+
+      .stat.passed {
+        color: #97cc64;
+      }
+      .stat.failed {
+        color: #fd5a3e;
+      }
+      .stat.broken {
+        color: #ffd050;
+      }
+      .stat.skipped {
+        color: #ddd;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 240px;
+        background: white;
+        padding: 1.5rem 0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+        position: fixed;
+        left: 0;
+        top: 72px;
+        bottom: 0;
+        overflow-y: auto;
+      }
+
+      .nav-menu {
+        list-style: none;
+      }
+
+      .nav-item {
+        margin: 0.25rem 0;
+      }
+
+      .nav-item a {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.5rem;
+        color: #666;
+        text-decoration: none;
+        transition: all 0.2s;
+      }
+
+      .nav-item a:hover {
+        background: #f5f5f5;
+        color: #667eea;
+      }
+
+      .nav-item.active a {
+        background: #f0f4ff;
+        color: #667eea;
+        border-right: 3px solid #667eea;
+        font-weight: 500;
+      }
+
+      .nav-icon {
+        font-size: 1.25rem;
+      }
+
+      /* Main Content */
+      .content {
+        margin-left: 240px;
+        padding: 2rem;
+        flex: 1;
+        margin-top: 72px;
+      }
+
+      .section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 2rem;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+      }
+
+      .subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      /* Summary Grid */
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .summary-card {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .summary-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .summary-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+
+      .passed-bg {
+        background: #97cc64;
+        color: white;
+      }
+      .failed-bg {
+        background: #fd5a3e;
+        color: white;
+      }
+      .broken-bg {
+        background: #ffd050;
+        color: white;
+      }
+      .skipped-bg {
+        background: #aaa;
+        color: white;
+      }
+
+      .summary-content {
+        flex: 1;
+      }
+
+      .summary-content h3 {
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .summary-content p {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .summary-percent {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #667eea;
+      }
+
+      /* Section Header */
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 2rem 0 1rem;
+      }
+
+      .section-header h2 {
+        font-size: 1.5rem;
+      }
+
+      .filters {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+      }
+
+      .filter-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+      }
+
+      .filter-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      /* Test Table */
+      .test-table {
+        overflow-x: auto;
+        margin: 1rem 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: #f9fafb;
+      }
+
+      th {
+        text-align: left;
+        padding: 1rem;
+        font-weight: 600;
+        color: #666;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      td {
+        padding: 1rem;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .test-row:hover {
+        background: #f9fafb;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .status-badge.passed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-badge.failed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .status-badge.broken {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-badge.skipped {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+
+      /* Environment Section */
+      .environment-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e5e7eb;
+      }
+
+      .environment-section h2 {
+        margin-bottom: 1.5rem;
+      }
+
+      .env-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+      }
+
+      .env-item {
+        display: flex;
+        padding: 0.75rem;
+        background: #f9fafb;
+        border-radius: 6px;
+      }
+
+      .env-label {
+        font-weight: 600;
+        color: #666;
+        min-width: 140px;
+      }
+
+      .env-value {
+        color: #333;
+      }
+
+      /* Chart Section */
+      .chart-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e5e7eb;
+      }
+
+      .chart-section h2 {
+        margin-bottom: 1.5rem;
+      }
+
+      .chart-container {
+        background: #f9fafb;
+        padding: 2rem;
+        border-radius: 8px;
+      }
+
+      .timeline-chart {
+        width: 100%;
+        height: 300px;
+      }
+
+      /* Footer */
+      .footer {
+        background: #1a1a1a;
+        color: #999;
+        text-align: center;
+        padding: 1.5rem;
+        margin-top: 2rem;
+      }
+
+      .footer p {
+        font-size: 0.875rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 60px;
+        }
+
+        .content {
+          margin-left: 60px;
+        }
+
+        .nav-item a span:not(.nav-icon) {
+          display: none;
+        }
+
+        .header-stats {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="14" fill="#ffd050" />
+            <path
+              d="M16 8l3.09 6.26L26 15.27l-5 4.87 1.18 6.88L16 23.77l-6.18 3.25L11 20.14l-5-4.87 6.91-1.01L16 8z"
+              fill="#fff"
+            />
+          </svg>
+          <span class="header-title">Allure Report</span>
+        </div>
+        <div class="header-stats">
+          <span class="stat passed">✓ 15 Passed</span>
+          <span class="stat failed">✗ 2 Failed</span>
+          <span class="stat broken">⚠ 1 Broken</span>
+          <span class="stat skipped">○ 3 Skipped</span>
+        </div>
+      </header>
+
+      <!-- Navigation -->
+      <nav class="sidebar">
+        <ul class="nav-menu">
+          <li class="nav-item active">
+            <a href="#overview">
+              <span class="nav-icon">📊</span>
+              <span>Overview</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#suites">
+              <span class="nav-icon">📁</span>
+              <span>Suites</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#graphs">
+              <span class="nav-icon">📈</span>
+              <span>Graphs</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#timeline">
+              <span class="nav-icon">⏱️</span>
+              <span>Timeline</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="content">
+        <section id="overview" class="section">
+          <h1>Test Execution Report</h1>
+          <p class="subtitle">
+            Sample Playwright Test Suite - February 8, 2026
+          </p>
+
+          <!-- Summary Cards -->
+          <div class="summary-grid">
+            <div class="summary-card" data-filter="passed">
+              <div class="summary-icon passed-bg">✓</div>
+              <div class="summary-content">
+                <h3>15</h3>
+                <p>Passed</p>
+              </div>
+              <div class="summary-percent">71%</div>
+            </div>
+
+            <div class="summary-card" data-filter="failed">
+              <div class="summary-icon failed-bg">✗</div>
+              <div class="summary-content">
+                <h3>2</h3>
+                <p>Failed</p>
+              </div>
+              <div class="summary-percent">10%</div>
+            </div>
+
+            <div class="summary-card" data-filter="broken">
+              <div class="summary-icon broken-bg">⚠</div>
+              <div class="summary-content">
+                <h3>1</h3>
+                <p>Broken</p>
+              </div>
+              <div class="summary-percent">5%</div>
+            </div>
+
+            <div class="summary-card" data-filter="skipped">
+              <div class="summary-icon skipped-bg">○</div>
+              <div class="summary-content">
+                <h3>3</h3>
+                <p>Skipped</p>
+              </div>
+              <div class="summary-percent">14%</div>
+            </div>
+          </div>
+
+          <!-- Test Results Table -->
+          <div class="section-header">
+            <h2>Test Results</h2>
+            <div class="filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="passed">Passed</button>
+              <button class="filter-btn" data-filter="failed">Failed</button>
+              <button class="filter-btn" data-filter="broken">Broken</button>
+            </div>
+          </div>
+
+          <div class="test-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Test Case</th>
+                  <th>Duration</th>
+                  <th>Suite</th>
+                </tr>
+              </thead>
+              <tbody id="testTableBody">
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should login with valid credentials</td>
+                  <td>2.3s</td>
+                  <td>Authentication Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should display dashboard after login</td>
+                  <td>1.8s</td>
+                  <td>Dashboard Suite</td>
+                </tr>
+                <tr class="test-row failed">
+                  <td><span class="status-badge failed">✗ Failed</span></td>
+                  <td>should handle invalid password</td>
+                  <td>3.2s</td>
+                  <td>Authentication Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should navigate to user profile</td>
+                  <td>1.5s</td>
+                  <td>Navigation Suite</td>
+                </tr>
+                <tr class="test-row broken">
+                  <td><span class="status-badge broken">⚠ Broken</span></td>
+                  <td>should load user settings page</td>
+                  <td>0.8s</td>
+                  <td>Settings Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should submit contact form</td>
+                  <td>2.7s</td>
+                  <td>Forms Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should validate email field</td>
+                  <td>1.2s</td>
+                  <td>Validation Suite</td>
+                </tr>
+                <tr class="test-row skipped">
+                  <td><span class="status-badge skipped">○ Skipped</span></td>
+                  <td>should test payment integration</td>
+                  <td>0.0s</td>
+                  <td>Payment Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should search for products</td>
+                  <td>3.5s</td>
+                  <td>Search Suite</td>
+                </tr>
+                <tr class="test-row failed">
+                  <td><span class="status-badge failed">✗ Failed</span></td>
+                  <td>should filter search results</td>
+                  <td>2.1s</td>
+                  <td>Search Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should add items to cart</td>
+                  <td>1.9s</td>
+                  <td>Shopping Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should update cart quantities</td>
+                  <td>1.4s</td>
+                  <td>Shopping Suite</td>
+                </tr>
+                <tr class="test-row skipped">
+                  <td><span class="status-badge skipped">○ Skipped</span></td>
+                  <td>should process checkout</td>
+                  <td>0.0s</td>
+                  <td>Shopping Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should display product details</td>
+                  <td>2.0s</td>
+                  <td>Product Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should show related products</td>
+                  <td>1.7s</td>
+                  <td>Product Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should handle product reviews</td>
+                  <td>2.2s</td>
+                  <td>Product Suite</td>
+                </tr>
+                <tr class="test-row passed">
+                  <td><span class="status-badge passed">✓ Passed</span></td>
+                  <td>should logout successfully</td>
+                  <td>1.1s</td>
+                  <td>Authentication Suite</td>
+                </tr>
+                <tr class="test-row skipped">
+                  <td><span class="status-badge skipped">○ Skipped</span></td>
+                  <td>should handle session timeout</td>
+                  <td>0.0s</td>
+                  <td>Authentication Suite</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Environment Info -->
+          <div class="environment-section">
+            <h2>Environment</h2>
+            <div class="env-grid">
+              <div class="env-item">
+                <span class="env-label">Browser:</span>
+                <span class="env-value">Chromium 121.0.6167.160</span>
+              </div>
+              <div class="env-item">
+                <span class="env-label">Platform:</span>
+                <span class="env-value">Linux x64</span>
+              </div>
+              <div class="env-item">
+                <span class="env-label">Test Framework:</span>
+                <span class="env-value">Playwright 1.41.0</span>
+              </div>
+              <div class="env-item">
+                <span class="env-label">Start Time:</span>
+                <span class="env-value">2026-02-08 14:30:22</span>
+              </div>
+              <div class="env-item">
+                <span class="env-label">End Time:</span>
+                <span class="env-value">2026-02-08 14:35:18</span>
+              </div>
+              <div class="env-item">
+                <span class="env-label">Total Duration:</span>
+                <span class="env-value">4m 56s</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Chart -->
+          <div class="chart-section">
+            <h2>Test Execution Timeline</h2>
+            <div class="chart-container">
+              <svg viewBox="0 0 800 300" class="timeline-chart">
+                <!-- Background grid -->
+                <line
+                  x1="50"
+                  y1="0"
+                  x2="50"
+                  y2="250"
+                  stroke="#e5e7eb"
+                  stroke-width="1"
+                />
+                <line
+                  x1="0"
+                  y1="250"
+                  x2="800"
+                  y2="250"
+                  stroke="#e5e7eb"
+                  stroke-width="1"
+                />
+
+                <!-- Bars -->
+                <rect
+                  x="60"
+                  y="50"
+                  width="80"
+                  height="200"
+                  fill="#97cc64"
+                  opacity="0.8"
+                  rx="4"
+                />
+                <text
+                  x="100"
+                  y="270"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#666"
+                >
+                  Passed
+                </text>
+                <text
+                  x="100"
+                  y="40"
+                  text-anchor="middle"
+                  font-size="18"
+                  fill="#333"
+                  font-weight="bold"
+                >
+                  15
+                </text>
+
+                <rect
+                  x="180"
+                  y="180"
+                  width="80"
+                  height="70"
+                  fill="#fd5a3e"
+                  opacity="0.8"
+                  rx="4"
+                />
+                <text
+                  x="220"
+                  y="270"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#666"
+                >
+                  Failed
+                </text>
+                <text
+                  x="220"
+                  y="170"
+                  text-anchor="middle"
+                  font-size="18"
+                  fill="#333"
+                  font-weight="bold"
+                >
+                  2
+                </text>
+
+                <rect
+                  x="300"
+                  y="215"
+                  width="80"
+                  height="35"
+                  fill="#ffd050"
+                  opacity="0.8"
+                  rx="4"
+                />
+                <text
+                  x="340"
+                  y="270"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#666"
+                >
+                  Broken
+                </text>
+                <text
+                  x="340"
+                  y="205"
+                  text-anchor="middle"
+                  font-size="18"
+                  fill="#333"
+                  font-weight="bold"
+                >
+                  1
+                </text>
+
+                <rect
+                  x="420"
+                  y="195"
+                  width="80"
+                  height="55"
+                  fill="#aaa"
+                  opacity="0.8"
+                  rx="4"
+                />
+                <text
+                  x="460"
+                  y="270"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#666"
+                >
+                  Skipped
+                </text>
+                <text
+                  x="460"
+                  y="185"
+                  text-anchor="middle"
+                  font-size="18"
+                  fill="#333"
+                  font-weight="bold"
+                >
+                  3
+                </text>
+              </svg>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <p>
+        Generated by Allure Framework • Sample Report • 2026-02-08 14:35:18 UTC
+      </p>
+    </footer>
+
+    <script>
+      // Filter functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const filterButtons = document.querySelectorAll(".filter-btn");
+        const testRows = document.querySelectorAll(".test-row");
+        const summaryCards = document.querySelectorAll(".summary-card");
+
+        filterButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            filterButtons.forEach((btn) => btn.classList.remove("active"));
+            this.classList.add("active");
+
+            const filterValue = this.dataset.filter;
+
+            testRows.forEach((row) => {
+              if (filterValue === "all") {
+                row.style.display = "";
+              } else {
+                row.style.display = row.classList.contains(filterValue)
+                  ? ""
+                  : "none";
+              }
+            });
+          });
+        });
+
+        // Summary card click
+        summaryCards.forEach((card) => {
+          card.addEventListener("click", function () {
+            const filter = this.dataset.filter;
+            const button = document.querySelector(
+              `.filter-btn[data-filter="${filter}"]`
+            );
+            if (button) button.click();
+          });
+        });
+
+        // Navigation
+        const navItems = document.querySelectorAll(".nav-item");
+        navItems.forEach((item) => {
+          item.addEventListener("click", function () {
+            navItems.forEach((nav) => nav.classList.remove("active"));
+            this.classList.add("active");
+          });
+        });
+
+        console.log("Allure Report loaded successfully");
+      });
+    </script>
+  </body>
+</html>
